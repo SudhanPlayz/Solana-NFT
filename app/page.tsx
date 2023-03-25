@@ -1,8 +1,12 @@
 "use client";
 import { useState } from "react"
+import { Connection, PublicKey, Wallet, Token } from '@solana/web3.js';
 
 export default function Home() {
   const [wallet, setWallet] = useState(null)
+  const [nfts, setNfts] = useState([])
+
+
 
   return (
     <>
@@ -27,8 +31,16 @@ export default function Home() {
               `You can transfer your NFT to another wallet address below.` :
               `Please connect your wallet to continue.`
           }</p>
-          <div className="flex flex-col items-center justify-center">
-            <img alt="NFT Image" src="https://api.unsplash.com/photos/random" width={250} height={250} />
+          <div className="flex flex-row items-center justify-center">
+            <div className="card bg-base-100 shadow-xl p-10">
+              <div className="card-body">
+                <img className="rounded-lg" src="https://picsum.photos/150/150" alt="NFT Image" />
+                <div className="card-title">NFT Name</div>
+                <div className="card-actions flex justify-center items-center">
+                  <button className="btn btn-primary">Transfer</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
