@@ -188,7 +188,7 @@ export default function Home() {
                     <img src={nft.data.uriData.image} className="h-40 rounded-lg" />
                     <div className="p-3 text-white grow flex flex-col justify-around w-full">
                       <div className="text-2xl font-semibold">{nft.data.name}</div>
-                      <div className="text-slate-500">Minted by: <span className="text-slate-300">{nft.mint.toBase58().substr(0, 5) + "..." + nft.mint.toBase58().substr(-5)}</span></div>
+                      <div className="text-slate-500">Minted by: <span className="text-slate-300">{nft.mint.toString().substr(0, 5) + "..." + nft.mint.toString().substr(-5)}</span></div>
                       <div className="flex flex-row text-center">
                         <div className="m-1 p-1 w-1/2 bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700" onClick={() => window.open("https://explorer.solana.com/")}>View</div>
                         <div className="m-1 p-1 w-1/2 bg-lime-600 rounded-lg cursor-pointer hover:bg-lime-700" onClick={() => transferNFT(nft, publicKey, connection)}>Transfer</div>
