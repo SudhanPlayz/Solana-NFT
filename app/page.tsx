@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react"
 import { Toaster } from 'react-hot-toast'
-import { Account, Connection, PublicKey, Transaction } from "@solana/web3.js"
+import { Connection, PublicKey, Transaction, clusterApiUrl, } from "@solana/web3.js"
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
 import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
@@ -48,7 +48,7 @@ export default function Home() {
     if (window.solana) {
       const wallet = window.solana
       setWallet(wallet)
-      const connection = new Connection("https://sly-boldest-haze.solana-mainnet.discover.quiknode.pro/ce8cbf142592ab1ca55baaf964aedd2887e861ad/")
+      const connection = new Connection(clusterApiUrl("devnet"), "confirmed")
       setConnection(connection)
       let v = await wallet.connect()
       setPublicKey(new PublicKey(v.publicKey))
@@ -76,9 +76,9 @@ export default function Home() {
     const sendTxPromise = new Promise(async (resolve, reject) => {
       const transferInstruction = Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
-        publicKey,
+        new PublicKey(nft.mint),
         addressToSend,
-        new PublicKey(nft.updateAuthority),
+        publicKey,
         [],
         1
       );
@@ -89,17 +89,8 @@ export default function Home() {
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
       //@ts-ignore
-      const txid = await wallet.signTransaction(tx);
-
-      const txStatus = await connection.confirmTransaction(txid, "confirmed");
-
-      console.log(txStatus)
-
-      if (txStatus.value.err) {
-        return reject(txStatus.value.err);
-      }
-
-      resolve(txStatus.value);
+      const txid = await wallet.signAndSendTransaction(tx);
+      console.log(txid)
     })
 
     toast.promise(
