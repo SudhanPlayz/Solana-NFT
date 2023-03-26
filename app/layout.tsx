@@ -12,7 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="night">
-      <body>{children}</body>
+      <body>
+        {children}
+      </body>
     </html>
   )
 }
