@@ -1,50 +1,129 @@
 "use client";
-import { useState } from "react"
-import { Connection, PublicKey, Wallet, Token } from '@solana/web3.js';
+import { useEffect, useState } from "react"
+import { Connection, PublicKey } from "@solana/web3.js"
+import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
+import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
+import { copyFile } from "fs";
+
+declare global {
+  interface Window {
+    solana: any
+  }
+}
+
+interface INFT {
+  mint: string;
+  updateAuthority: string;
+  data: {
+    creators: any[];
+    name: string;
+    symbol: string;
+    uri: string;
+    sellerFeeBasisPoints: number;
+    uriData: {
+      name: string;
+      description: string;
+      image: string;
+      external_url: string;
+      background_color: string;
+    }
+  };
+  key: MetadataKey;
+  primarySaleHappened: boolean;
+  isMutable: boolean;
+  editionNonce: number;
+  masterEdition?: string | undefined;
+  edition?: string | undefined;
+}
 
 export default function Home() {
   const [wallet, setWallet] = useState(null)
-  const [nfts, setNfts] = useState([])
+  const [connection, setConnection] = useState<Connection | null>(null)
+  const [publicKey, setPublicKey] = useState<PublicKey | null>(null)
+  const [nfts, setNfts] = useState<INFT[]>([])
 
+  const connectWallet = async () => {
+    if (window.solana) {
+      const wallet = window.solana
+      setWallet(wallet)
+      const connection = new Connection("https://sly-boldest-haze.solana-mainnet.discover.quiknode.pro/ce8cbf142592ab1ca55baaf964aedd2887e861ad/")
+      setConnection(connection)
+      let v = await wallet.connect()
+      setPublicKey(new PublicKey(v.publicKey))
 
+      const nftAccounts = await getParsedNftAccountsByOwner({
+        publicAddress: v.publicKey.toBase58(),
+        connection: connection,
+      });
+      const nfts = []
+
+      for (let nft of nftAccounts) {
+        let nf = nft as INFT
+        nf.data.uriData = await fetch(nft.data.uri).then(res => res.json())
+        nfts.push(nf)
+      }
+
+      setNfts(nfts)
+    }
+  }
+
+  const transferNFT = async (nft: INFT) => {
+
+  }
+
+  useEffect(() => {
+    if (wallet) {
+      //@ts-ignore
+      wallet.on("disconnect", () => {
+        setWallet(null)
+        setPublicKey(null)
+      })
+    }
+  }, [wallet])
 
   return (
     <>
-    <div className="navbar bg-base-100">
-      <div className="flex-none">
-        <span className="text-lg font-bold">Solana NFT Transfer App</span>
+      <div className="navbar bg-base-100">
+        <div className="flex-none">
+          <span className="text-lg font-bold">Solana NFT Transfer App</span>
+        </div>
+        <div className="flex-1"></div>
+        <div className="flex-none">
+          <button className="btn btn-secondary" onClick={connectWallet} disabled={wallet ? true : false}>
+            {
+              publicKey ?
+                "Connected " + publicKey.toBase58().substr(0, 5) + "..." + publicKey.toBase58().substr(-5) :
+                "Connect Wallet"
+            }
+          </button>
+        </div>
       </div>
-      <div className="flex-1"></div>
-      <div className="flex-none">
-        <button className="btn btn-primary tooltip" data-tooltip="Connect your wallet to continue.">
-          Connect Wallet
-        </button>
-      </div>
-    </div>
 
-    <div className="container grid grid-cols-1 gap-3 p-4 mx-auto">
-      <div className="card bg-neutral shadow-xl">
-        <div className="card-body flex flex-col items-center justify-center">
-          <h2 className="card-title">Transfer NFT</h2>
-          <p className="card-subtitle text-center">{
+      <div className="container grid grid-cols-1 p-4 mx-auto">
+        <div className="card bg-neutral shadow-xl">
+          <div className="card-body flex flex-col items-center justify-center">
+            <h2 className="card-title">Transfer NFT</h2>
+            <p className="card-subtitle text-center">{
               wallet ?
-              `You can transfer your NFT to another wallet address below.` :
-              `Please connect your wallet to continue.`
-          }</p>
-          <div className="flex flex-row items-center justify-center">
-            <div className="card bg-base-100 shadow-xl p-10">
-              <div className="card-body">
-                <img className="rounded-lg" src="https://picsum.photos/150/150" alt="NFT Image" />
-                <div className="card-title">NFT Name</div>
-                <div className="card-actions flex justify-center items-center">
-                  <button className="btn btn-primary">Transfer</button>
+                `You can transfer your NFT to another wallet address below.` :
+                `Please connect your wallet to continue.`
+            }</p>
+            <div className="flex flex-row items-center justify-center">
+              {nfts.map((nft, index) => (
+                <div className="card bg-base-100 shadow-xl p-4" key={index}>
+                  <div className="card-body flex flex-col justify-center items-center">
+                    <img width="150px" height="150px" className="rounded-lg" src={nft.data.uriData.image} alt="NFT Image" />
+                    <h2 className="card-title">{nft.data.name}</h2>
+                    <div className="card-actions flex justify-center items-center">
+                      <button className="btn btn-primary" onClick={() => transferNFT(nft)}>Transfer</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   )
 }
