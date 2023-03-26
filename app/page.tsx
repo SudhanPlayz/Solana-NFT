@@ -181,14 +181,18 @@ export default function Home() {
                 `You can transfer your NFT to another wallet address below.` :
                 `Please connect your wallet to continue.`
             }</p>
-            <div className="flex flex-row items-center justify-center">
+            <div class="flex flex-row items-center bg-slate-800 flex-wrap justify-center">
               {publicKey && connection && nfts.map((nft, index) => (
-                <div className="card bg-base-100 shadow-xl p-4" key={index}>
-                  <div className="card-body flex flex-col justify-center items-center">
-                    <img width="150px" height="150px" className="rounded-lg" src={nft.data.uriData.image} alt="NFT Image" />
-                    <h2 className="card-title">{nft.data.name}</h2>
-                    <div className="card-actions flex justify-center items-center">
-                      <button className="btn btn-primary" onClick={() => transferNFT(nft, publicKey, connection)}>Transfer</button>
+                <div class="flex flex-col bg-slate-900 rounded-lg m-3" key={index}>
+                  <div class="flex flex-row">
+                    <img src={nft.data.uriData.image} class="h-40 rounded-lg" />
+                    <div class="p-3 text-white grow flex flex-col justify-around w-full">
+                      <div class="text-2xl font-semibold">{nft.data.name}</div>
+                      <div class="text-slate-500">Minted by: <span class="text-slate-300">{nft.mint.toBase58().substr(0, 5) + "..." + nft.mint.toBase58().substr(-5)}</span></div>
+                      <div class="flex flex-row text-center">
+                        <div class="m-1 p-1 w-1/2 bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700" onClick={() => window.open("https://explorer.solana.com/")}>View</div>
+                        <div class="m-1 p-1 w-1/2 bg-lime-600 rounded-lg cursor-pointer hover:bg-lime-700" onClick={() => transferNFT(nft, publicKey, connection)}>Transfer</div>
+                      </div>
                     </div>
                   </div>
                 </div>
