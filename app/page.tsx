@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react"
 import { Toaster } from 'react-hot-toast'
-import { Account, Connection, PublicKey, Transaction, clusterApiUrl } from "@solana/web3.js"
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { Connection, PublicKey, Transaction, clusterApiUrl, } from "@solana/web3.js"
+import { createTransferInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
 import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
 import { toast } from "react-hot-toast";
@@ -48,7 +48,7 @@ export default function Home() {
     if (window.solana) {
       const wallet = window.solana
       setWallet(wallet)
-      const connection = new Connection(clusterApiUrl("testnet"), "confirmed")
+      const connection = new Connection(clusterApiUrl("devnet"), "confirmed")
       setConnection(connection)
       let v = await wallet.connect()
       setPublicKey(new PublicKey(v.publicKey))
@@ -71,35 +71,26 @@ export default function Home() {
   }
 
   const transferNFT = async (nft: INFT, publicKey: PublicKey, connection: Connection) => {
-    const addressToSend = new PublicKey("95H5jdaD3jA1HHw5Vz15iznnD4EHwuVsTsCXPDepES4a");
-
+    const addressToSend = new PublicKey("GjakKEh4NSHeqcg5Fk2MsdCnLocM7xtbhrr3jmcG8ygA");
+    const tokenInfo = await connection.getParsedAccountInfo(new PublicKey(nft.mint))
     const sendTxPromise = new Promise(async (resolve, reject) => {
-      const transferInstruction = Token.createTransferInstruction(
-        TOKEN_PROGRAM_ID,
+      
+      const transferInstruction = createTransferInstruction(
         publicKey,
         addressToSend,
-        new PublicKey(nft.updateAuthority),
+        tokenInfo.value!.owner,
+        1,
         [],
-        1
+        TOKEN_PROGRAM_ID
       );
 
       const tx = new Transaction().add(transferInstruction);
 
-      tx.feePayer = publicKey;
       tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
       //@ts-ignore
-      const txid = await wallet.signTransaction(tx);
-
-      const txStatus = await connection.confirmTransaction(txid, "confirmed");
-
-      console.log(txStatus)
-
-      if (txStatus.value.err) {
-        return reject(txStatus.value.err);
-      }
-
-      resolve(txStatus.value);
+      const txid = await wallet.signAndSendTransaction(tx);
+      console.log(txid)
     })
 
     toast.promise(
